@@ -68,10 +68,10 @@ getMACD<-function(hiStore,loStore,clStore,column,iter){
   
   if (beforeMacd > beforeSignalLine && lastMacdLine < lastSignalLine && williamsP <0.2)
     
-    return(-300000/last(close)) # short -300000
+    return( floor(-1000000/last(close))) # short 
   
   if (beforeMacd < beforeSignalLine && lastMacdLine > lastSignalLine &&  williamsP >0.8)
-    return(300000/last(close))  # long 300000
+    return( floor(-1000000/last(close)))  # long
   
   return(0) 
 }
