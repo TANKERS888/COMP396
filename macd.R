@@ -40,7 +40,7 @@ getOrders <- function(store,newRowList,currentPos,info,params) {
               limitPrices2=allzero))}
 
 
-################## MACD && WPR#########################
+################## MACD && WPR #########################
 
 
 getMACD<-function(hiStore,loStore,clStore,column,iter){
