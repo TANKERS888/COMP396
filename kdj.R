@@ -1,73 +1,93 @@
 ##########
 #  KDJ   #
 ##########
-maxRows <- 10000 
+
+maxRows <- 10000
 
 ###################### getOrders ############################
-
-getOrders <- function(store,newRowList,currentPos,info,params) {
+getOrders <- function(store,newRowList,currentPos,info,params){
   
   allzero  <- rep(0,length(newRowList)) 
   
-  if (is.null(store)) {
-    store <- initStore(newRowList,params$series)
+  marketOrders <- allzero
+  
+  
+  if (is.null(store)){
+    store <- initStore(newRowList,
+                       params$series)
   }
-  else 
-    store <- updateStore(store, newRowList,params$series)
-
-    pos <- allzero
-  
-  
-  if ((store$iter>params$lookback-1)) { 
-    
-    for (i in 1:length(params$series)) {
-      
-      startIndex <- store$iter - params$lookback 
-      
-      cl <- newRowList[[params$series[i]]]$Close
-      
-      
-      kdj <- stoch(cbind(store$hi[startIndex:store$iter,i],
-                         store$lo[startIndex:store$iter,i],
-                         store$cl[startIndex:store$iter,i]),
-                   nFastK = params$nFastK, 
-                   nFastD = params$nFastD, 
-                   nSlowD = params$nSlowD, 
-                   maType = list(list(SMA),list(EMA,wilder=TRUE),list(SMA)), 
-                   bounded= TRUE,
-                   smooth=1)*100
-      
-      KDJ <- last(kdj)
-    
-      J <- 3*as.numeric(KDJ[["fastD"]]) - 2*as.numeric(KDJ[["fastK"]])  #J line
-      D <- as.numeric(KDJ[["fastD"]])  #D line
-      K <- as.numeric(KDJ[["fastK"]]) #K line
-      
-      if (K <20 && D<30 && J<0) {
-        pos[params$series[i]] <- -(params$size/last(as.numeric(cl)))  
-      }
-      else if(K >80 && D >70 && J>90)
-        pos[params$series[i]] <- (params$size/last(as.numeric(cl)))
-    }
+  else{
+    store <- updateStore(store, 
+                         newRowList,
+                         params$series)
   }
   
-  marketOrders <-  pos
+  
+  if (store$iter>params$lookback-1) {
+    marketOrders <- sapply(1:length(newRowList), function(x)  
+      ifelse(x %in% params$series,  getKDJ(store$hi,
+                                            store$lo,
+                                            store$cl,
+                                            which(x==params$series),
+                                            store$iter,
+                                            info),
+             0))
+  }
   
   
-  # exit positions from yesterday
+  
+  marketOrders <- marketOrders - currentPos #considering change the marketOrders -> -marketOrders
+  
   return(list(store=store,marketOrders=marketOrders,
               limitOrders1=allzero,
               limitPrices1=allzero,
               limitOrders2=allzero,
-              limitPrices2=allzero))
+              limitPrices2=allzero))}
+
+
+#################### KDJ #########################
+
+
+getKDJ<-function(hiStore,loStore,clStore,column,iter,info){
+  startIndex <- iter - params$lookback  
+ 
+  
+  high<- hiStore[startIndex:iter,column]
+  low<- loStore[startIndex:iter,column]
+  close<- clStore[startIndex:iter ,column]
+  
+  
+  kdj <- stoch(cbind(high,
+                     low,
+                     close),
+               nFastK = params$nFastK, 
+               nFastD = params$nFastD, 
+               nSlowD = params$nSlowD, 
+               maType = list(list(SMA),list(EMA,wilder=TRUE),list(SMA)), 
+               bounded= TRUE,
+               smooth=1)*100
+  
+  KDJ <- last(kdj)
+  
+  J <- 3*as.numeric(KDJ[["fastD"]]) - 2*as.numeric(KDJ[["fastK"]])  #J line
+  D <- as.numeric(KDJ[["fastD"]])  #D line
+  K <- as.numeric(KDJ[["fastK"]]) #K line
+  
+    if (K>80 && D>70)
+      
+      return( floor(-params$size/last(close))) # short 
+    
+    if (K<20 && D<30)
+      
+      return( floor(params$size/last(close)))  # long 
+    
+    return(0) 
 }
 
 
 
 
-######## Managing the store (high, low, close) ##############
-
-
+######## Managing the store (high, low, close) ##########
 
 #close INITIAL
 initClStore  <- function(newRowList,series) {
@@ -127,3 +147,7 @@ updateStore <- function(store, newRowList, series) {
   store$lo <- updateLoStore(store$lo,newRowList,series,store$iter) 
   return(store)
 }
+
+
+
+
