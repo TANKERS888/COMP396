@@ -1,0 +1,78 @@
+library(xts) # this also loads zoo which has read.zoo
+library(quantmod)
+library(ggplot2)
+library(grid)
+library(gridExtra)
+
+
+par(mfrow=c(2,1))
+closing<-dataList[[10]][1:200,"Close"]
+macd =MACD(dataList[[10]][1:200,"Close"], nFast=12, nSlow=26,nSig=9,matype=SMA)
+
+x1<-macd$macd
+x2<-macd$signal
+
+set.seed(1)
+x1=data.matrix(as.data.frame(macd$macd))
+x2=data.matrix(as.data.frame(macd$signal))
+# Find points where x2 is above x1.
+above<-x1<x2
+# Points always intersect when above=TRUE, then FALSE or reverse
+intersect.points<-which(diff(above)!=0)
+# Find the slopes for each line segment.
+x1.slopes<-x1[intersect.points+1]-x1[intersect.points]
+x2.slopes<-x2[intersect.points+1]-x2[intersect.points]
+# Find the intersection for each segment.
+x.points<-intersect.points + ((x2[intersect.points] - x1[intersect.points]) / (x1.slopes-x2.slopes))
+y.points<-x1[intersect.points] + (x1.slopes*(x.points-intersect.points))
+# Plot.
+plot(x1,type='l')
+lines(x2,type='l',col='red')
+points(m,y.points,col='blue')
+plot(closing)
+
+
+
+m<-round(x.points, digits = 0)
+n<-y.points
+M<-matrix(m)
+N<-matrix(n)
+mn<-cbind(M,N)
+
+allzero  <- rep(0,length(closing))
+
+marketorders <- allzero
+
+
+for(j in 1:length(buy(m))){
+  marketorders<-  replace( marketorders, buy(m)[j], 500)
+}
+
+for(j in 1:length(sell(m))){
+  marketorders<-replace( marketorders,sell(m)[j],-500)
+}
+
+
+
+  
+buy <- function(m){
+  buyorder<-NULL
+  for (i in 1:length(m)){
+    if( (x1[m[i],]) > (x1[m[i]-1,])) {
+     buyorder<-append(buyorder, m[i])
+    }
+  }
+ return( buyorder)
+}
+
+
+
+sell <- function(m){
+  sellorder<-NULL
+  for (i in 1:length(m)){
+    if( (x1[m[i],]) < (x1[m[i]-1,])) {
+      sellorder<-append(sellorder, m[i])
+    }
+  }
+  return(sellorder)
+}
