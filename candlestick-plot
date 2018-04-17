@@ -1,0 +1,40 @@
+library(plotly)
+library(quantmod)
+
+# get data
+getSymbols("AAPL",src='yahoo')
+df <- data.frame(Date=index(AAPL),coredata(AAPL))
+
+# create Bollinger Bands
+bbands <- BBands(AAPL[,c("AAPL.High","AAPL.Low","AAPL.Close")])
+
+vhf <- VHF(AAPL[,c("AAPL.High")],25)*150
+
+# join and subset data
+df <- subset(cbind(df, data.frame(bbands[,1:3]),data.frame(vhf[,1])), Date >= "2017-10-14")
+
+
+
+# plot candlestick chart
+p <- df %>%
+  plot_ly(x = ~Date, type="candlestick",
+          open = ~AAPL.Open, close = ~AAPL.Close,
+          high = ~AAPL.High, low = ~AAPL.Low, name = "AAPL") %>%
+  add_lines(x = ~Date, y = ~up , name = "B Bands",
+            line = list(color = '#ccc', width = 0.5),
+            legendgroup = "Bollinger Bands",
+            hoverinfo = "none", inherit = F) %>%
+  add_lines(x = ~Date, y = ~dn, name = "B Bands",
+            line = list(color = '#ccc', width = 0.5),
+            legendgroup = "Bollinger Bands", inherit = F,
+            showlegend = FALSE, hoverinfo = "none") %>%
+  add_lines(x = ~Date, y = ~mavg, name = "Mv Avg",
+            line = list(color = '#E377C2', width = 0.5),
+            hoverinfo = "none", inherit = F) %>%
+  add_lines(x = ~Date, y = ~vhf...1., name = "vhf",
+            line = list(color = 'blue', width = 0.5),
+            hoverinfo = "none", inherit = F) %>% 
+  
+  
+  layout(yaxis = list(title = "Price")) %>%
+  layout(title = "Apple Stock")
