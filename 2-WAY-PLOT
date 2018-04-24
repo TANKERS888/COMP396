@@ -1,0 +1,55 @@
+library(quantmod)
+source('framework/data.R'); 
+source('framework/backtester.R')
+source('framework/processResults.R'); 
+source('framework/utilities.R'); # for backtestAndPlot function
+source('example_strategies.R');
+
+# load data
+dataList <- getData(directory="PART1")
+high<-dataList[[10]][1:100,"High"]
+low<-dataList[[10]][1:100,"Low"]
+close<-dataList[[10]][1:100,"Close"]
+open<-dataList[[10]][1:100,"Open"]
+dataStore<-cbind(high,low,close,open)
+
+
+# optional, set up bar colours as in your question, for chart_Series:
+myTheme<-chart_theme()
+myTheme$col$up.col<-'green'
+myTheme$col$dn.col<-'red'
+myTheme$col$dn.border <- 'black'
+myTheme$col$up.border <- 'black'
+myTheme$rylab <- FALSE
+myTheme$col$grid <- "lightgrey"
+
+# get your desired result
+# adx <- stoch(na.omit(HLC(candleStick)), 25, 25, 9, 'SMA')[,2:3]
+candleStick <- dataStore
+
+adx <- ADX(cbind(high,low,close),n=14)
+dip<-adx[,1]
+din<-adx[,2]
+
+bbands <- BBands(cbind(high,low,close))
+mavg<-bbands[,2]
+
+#plot out
+chart_Series(candleStick,  theme = myTheme)
+add_TA(dip, col = "purple", lty = "dashed")
+add_TA(din, col = "red", lty = "dashed")
+
+
+add_TA(mavg,col = "blue",  on = 1)
+
+
+
+
+
+
+
+#an alter way to do this 
+####################################################################
+chartSeries(df, TA = NULL, theme = "white", up.col = "green", dn.col = "red")
+addTA(dip, col = "purple", lty = "dashed")
+addTA(din, col = "red", lty = 3, on = 2)
