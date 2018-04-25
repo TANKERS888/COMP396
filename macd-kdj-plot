@@ -1,17 +1,11 @@
 library(quantmod)
-source('framework/data.R'); 
-source('framework/backtester.R')
-source('framework/processResults.R'); 
-source('framework/utilities.R'); # for backtestAndPlot function
-source('example_strategies.R');
 
-# load data
-dataList <- getData(directory="PART1")
 
-high<-dataList[[10]][1:200,"High"]
-low<-dataList[[10]][1:200,"Low"]
-close<-dataList[[10]][1:200,"Close"]
-open<-dataList[[10]][1:200,"Open"]
+
+high<-dataList[[2]][1:100,"High"]
+low<-dataList[[2]][1:100,"Low"]
+close<-dataList[[2]][1:100,"Close"]
+open<-dataList[[2]][1:100,"Open"]
 dataStore<-cbind(high,low,close,open)
 
 
@@ -36,10 +30,10 @@ bbands <- BBands(cbind(high,low,close))
 mavg<-bbands[,2]
 
 
-macd =MACD(close, nFast=12, nSlow=26,nSig=9,matype=SMA)
+macd <-MACD(close, nFast=12, nSlow=26,nSig=9,matype=SMA)
 
 macdLine<-macd$macd
-sigLine<-macd$signal
+sigLine<-macd$sig
 
 
 kdj <- stoch(cbind(high,
@@ -53,29 +47,29 @@ kdj <- stoch(cbind(high,
              smooth=1)*100
 
 
-K<-kdj$fastK
-D<-kdj$fastD
+K<- kdj$fastK
+D<- kdj$fastD
 
 #plot out
 chart_Series(candleStick,  theme = myTheme)
-# add_TA(dip, col = "purple", lty = "dashed")
+#add_TA(dip, col = "purple", lty = "dashed")
 # add_TA(din, col = "red", lty = "dashed")
 
 
-add_TA(mavg,col = "blue",  on = 1)
+add_TA(mavg, col = "blue",  on = 1)
 add_TA(macdLine, col = "red", lty = "dashed")
 add_TA(sigLine, col = "purple", lty = "dashed",on=2)
-
+add_TA(K, col = "darkred", lty = "dashed")
+add_TA(D, col = "orange", lty = "dashed")
 
 for (i in 1:length(close)){
-  if(i>50){
-  if(macdLine[i,] < sigLine[i,] &&  K[i,]<15 ){
-    abline(v= i, col="blue")
-  }
+  if(i>40){
+    if(macdLine[i,] < sigLine[i,] &&  K[i,]<15 && D[i,] <20 ){
+      abline(v= i, col="blue")
+    }
     
-  if(macdLine[i,] > sigLine[i,] &&  K[i,]>85 ){
+    if(macdLine[i,] > sigLine[i,] &&  K[i,]>85 && D[i,]>80){
       abline(v= i, col="red")
+    }
   }
-  }
-  
 }
