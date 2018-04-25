@@ -1,0 +1,5 @@
+par(mfrow=c(2,5))
+
+for(i in 1:10){
+  plot(diff(dataList[[i]][1:200,"Open"]) ,type="c",main =i)
+}
