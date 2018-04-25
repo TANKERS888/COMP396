@@ -1,0 +1,81 @@
+library(quantmod)
+source('framework/data.R'); 
+source('framework/backtester.R')
+source('framework/processResults.R'); 
+source('framework/utilities.R'); # for backtestAndPlot function
+source('example_strategies.R');
+
+# load data
+dataList <- getData(directory="PART1")
+
+high<-dataList[[10]][1:200,"High"]
+low<-dataList[[10]][1:200,"Low"]
+close<-dataList[[10]][1:200,"Close"]
+open<-dataList[[10]][1:200,"Open"]
+dataStore<-cbind(high,low,close,open)
+
+
+# optional, set up bar colours as in your question, for chart_Series:
+myTheme<-chart_theme()
+myTheme$col$up.col<-'green'
+myTheme$col$dn.col<-'red'
+myTheme$col$dn.border <- 'black'
+myTheme$col$up.border <- 'black'
+myTheme$rylab <- FALSE
+myTheme$col$grid <- "lightgrey"
+
+# get your desired result
+# adx <- stoch(na.omit(HLC(candleStick)), 25, 25, 9, 'SMA')[,2:3]
+candleStick <- dataStore
+
+adx <- ADX(cbind(high,low,close),n=14)
+dip<-adx[,1]
+din<-adx[,2]
+
+bbands <- BBands(cbind(high,low,close))
+mavg<-bbands[,2]
+
+
+macd =MACD(close, nFast=12, nSlow=26,nSig=9,matype=SMA)
+
+macdLine<-macd$macd
+sigLine<-macd$signal
+
+
+kdj <- stoch(cbind(high,
+                   low,
+                   close),
+             nFastK = 21, 
+             nFastD = 7, 
+             nSlowD = 7, 
+             maType = list(list(SMA),list(EMA,wilder=TRUE),list(SMA)), 
+             bounded= TRUE,
+             smooth=1)*100
+
+
+K<-kdj$fastK
+D<-kdj$fastD
+
+#plot out
+chart_Series(candleStick,  theme = myTheme)
+# add_TA(dip, col = "purple", lty = "dashed")
+# add_TA(din, col = "red", lty = "dashed")
+
+
+add_TA(mavg,col = "blue",  on = 1)
+add_TA(macdLine, col = "red", lty = "dashed")
+add_TA(sigLine, col = "purple", lty = "dashed",on=2)
+
+
+for (i in 1:length(close)){
+  if(i>50){
+  if(macdLine[i,] < sigLine[i,] &&  K[i,]<15 ){
+    abline(v= i, col="blue")
+  }
+    
+  if(macdLine[i,] > sigLine[i,] &&  K[i,]>85 ){
+      abline(v= i, col="red")
+  }
+  }
+  
+}
