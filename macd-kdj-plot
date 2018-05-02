@@ -1,12 +1,10 @@
-library(quantmod)
-
-
-
-high<-dataList[[2]][1:100,"High"]
-low<-dataList[[2]][1:100,"Low"]
-close<-dataList[[2]][1:100,"Close"]
-open<-dataList[[2]][1:100,"Open"]
+high<-dataList[[4]][700:850,"High"]
+low<-dataList[[4]][700:850,"Low"]
+close<-dataList[[4]][700:850,"Close"]
+open<-dataList[[4]][700:850,"Open"]
 dataStore<-cbind(high,low,close,open)
+
+
 
 
 # optional, set up bar colours as in your question, for chart_Series:
@@ -30,7 +28,7 @@ bbands <- BBands(cbind(high,low,close))
 mavg<-bbands[,2]
 
 
-macd <-MACD(close, nFast=12, nSlow=26,nSig=9,matype=SMA)
+macd <-MACD(close, nFast=12*2, nSlow=26*2,nSig=9*2,matype=SMA)
 
 macdLine<-macd$macd
 sigLine<-macd$sig
@@ -59,17 +57,17 @@ chart_Series(candleStick,  theme = myTheme)
 add_TA(mavg, col = "blue",  on = 1)
 add_TA(macdLine, col = "red", lty = "dashed")
 add_TA(sigLine, col = "purple", lty = "dashed",on=2)
-add_TA(K, col = "darkred", lty = "dashed")
-add_TA(D, col = "orange", lty = "dashed")
+# add_TA(K, col = "green", lty = "dashed")
+# add_TA(D, col = "blue", lty = "dashed")
 
 for (i in 1:length(close)){
-  if(i>40){
-    if(macdLine[i,] < sigLine[i,] &&  K[i,]<15 && D[i,] <20 ){
-      abline(v= i, col="blue")
+  if(i>80){
+    if(macdLine[i,] < sigLine[i,] &&  K[i,]<10 && D[i,] <30 ){
+      abline(v= i, col="blue") # 买 预想低点
     }
     
-    if(macdLine[i,] > sigLine[i,] &&  K[i,]>85 && D[i,]>80){
-      abline(v= i, col="red")
+    if(macdLine[i,] > sigLine[i,] &&  K[i,]>90 && D[i,]>70){
+      abline(v= i, col="red") # 卖 预想高点
     }
   }
 }
