@@ -1,0 +1,55 @@
+
+##############################################################
+#               find volitality average                      #
+##############################################################
+par(mfrow=c(3,4))
+
+v1<-sd(volatility(dataList[[1]])[10:997])
+v2<-sd(volatility(dataList[[2]])[10:997])
+v3<-sd(volatility(dataList[[3]])[10:997])
+v4<-sd(volatility(dataList[[4]])[10:997])
+v5<-sd(volatility(dataList[[5]])[10:997])
+v6<-sd(volatility(dataList[[6]])[10:997])
+v7<-sd(volatility(dataList[[7]])[10:997])
+v8<-sd(volatility(dataList[[7]])[10:997])
+v9<-sd(volatility(dataList[[9]])[10:997])
+v10<-sd(volatility(dataList[[10]])[10:997])
+
+
+plot(v1,type="l")
+
+
+# results$pnlList[[6]]$DailyPnL
+# plot(results$pnlList[[6]]$CumPnL)
+
+###############################################
+
+
+plot(volatility(dataList[[7]]$Close))
+
+par(mfrow=c(3,3))
+
+s<-7
+b<-1
+e<-997
+
+high<-dataList[[s]][b:e,"High"]
+low<-dataList[[s]][b:e,"Low"]
+close<-dataList[[s]][b:e,"Close"]
+open<-dataList[[s]][b:e,"Open"]
+
+series7<-cbind(high,low,close,open)
+
+#an alter way to do this 
+####################################################################
+# optional, set up bar colours as in your question, for chart_Series:
+myTheme<-chart_theme()
+myTheme$col$up.col<-'green'
+myTheme$col$dn.col<-'red'
+myTheme$col$dn.border <- 'black'
+myTheme$col$up.border <- 'black'
+myTheme$rylab <- FALSE
+myTheme$col$grid <- "lightgrey"
+
+#plot out
+chart_Series(series7,  theme = myTheme)
